@@ -80,9 +80,9 @@ class DB:
         Raises:
             ValueError: If an invalid attribute is passed.
         """
-        user = self.find_user_by(id=user_id)  # Locate the user using `find_user_by`
+        user = self.find_user_by(id=user_id)  # Locate the user
         for key, value in kwargs.items():
-            if not hasattr(user, key):  # Check if the attribute exists on the User model
+            if not hasattr(user, key):  # Check if the attribute exists
                 raise ValueError(f"{key} is not a valid attribute of User")
             setattr(user, key, value)  # Update the attribute dynamically
         self._session.commit()  # Commit changes to the database
