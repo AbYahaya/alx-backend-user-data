@@ -6,7 +6,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
 from sqlalchemy.exc import NoResultFound, InvalidRequestError
+import logging
 from user import Base, User
+# Suppress SQLAlchemy info/debug logs
+logging.basicConfig()
+logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
 
 
 class DB:
@@ -16,7 +20,7 @@ class DB:
     def __init__(self) -> None:
         """Initialize a new DB instance
         """
-        self._engine = create_engine("sqlite:///a.db", echo=True)
+        self._engine = create_engine("sqlite:///a.db", echo=False)
         Base.metadata.drop_all(self._engine)
         Base.metadata.create_all(self._engine)
         self.__session = None
@@ -65,3 +69,20 @@ class DB:
             raise NoResultFound("No user found with the specified criteria.")
         except InvalidRequestError:
             raise InvalidRequestError("Invalid query arguments provided.")
+
+    def update_user(self, user_id: int, **kwargs) -> None:
+        """Update a user's attributes.
+
+        Args:
+            user_id (int): The ID of the user to update.
+            **kwargs: Key-value pairs of attributes to update.
+
+        Raises:
+            ValueError: If an invalid attribute is passed.
+        """
+        user = self.find_user_by(id=user_id)  # Locate the user using `find_user_by`
+        for key, value in kwargs.items():
+            if not hasattr(user, key):  # Check if the attribute exists on the User model
+                raise ValueError(f"{key} is not a valid attribute of User")
+            setattr(user, key, value)  # Update the attribute dynamically
+        self._session.commit()  # Commit changes to the database
